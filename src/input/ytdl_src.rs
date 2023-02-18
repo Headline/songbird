@@ -11,6 +11,7 @@ use std::{
     io::{BufRead, BufReader, Read},
     process::{Command, Stdio},
 };
+
 use tokio::{process::Command as TokioCommand, task};
 use tracing::trace;
 
@@ -33,23 +34,59 @@ const YOUTUBE_DL_COMMAND: &str = if cfg!(feature = "youtube-dlc") {
 ///
 /// [`Restartable::ytdl`]: crate::input::restartable::Restartable::ytdl
 pub async fn ytdl(uri: impl AsRef<str>) -> Result<Input> {
-    _ytdl(uri.as_ref(), &[]).await
+    _ytdl(uri.as_ref(), &[], None).await
 }
 
-pub(crate) async fn _ytdl(uri: &str, pre_args: &[&str]) -> Result<Input> {
-    let ytdl_args = [
-        "--print-json",
-        "-f",
-        "webm[abr>0]/bestaudio/best",
-        "-R",
-        "infinite",
-        "--no-playlist",
-        "--ignore-config",
-        "--no-warnings",
-        uri,
-        "-o",
-        "-",
-    ];
+/// Creates a streamed audio source with `youtube-dl` and `ffmpeg` using a cookies file for authentication.
+///
+/// This source is not seek-compatible.
+/// If you need looping or track seeking, then consider using
+/// [`Restartable::ytdl`].
+///
+/// `youtube-dlc` and `yt-dlp` are also useable by enabling the `youtube-dlc`
+/// and `yt-dlp` features respectively.
+///
+/// [`Restartable::ytdl`]: crate::input::restartable::Restartable::ytdl
+pub async fn ytdl_cookies(uri: impl AsRef<str>, cookie_file : &str) -> Result<Input> {
+    _ytdl(uri.as_ref(), &[], Some(cookie_file)).await
+}
+
+
+pub(crate) async fn _ytdl(uri: &str, pre_args: &[&str], cookie_file : Option<&str>) -> Result<Input> {
+    let ytdl_args = {
+        if let Some(file) = cookie_file {
+            [
+                "--print-json",
+                "-f",
+                "webm[abr>0]/bestaudio/best",
+                "-R",
+                "infinite",
+                "--no-playlist",
+                "--ignore-config",
+                "--no-warnings",
+                "--cookies",
+                file,
+                uri,
+                "-o",
+                "-",
+            ].to_vec()
+        }
+        else {
+            [
+                "--print-json",
+                "-f",
+                "webm[abr>0]/bestaudio/best",
+                "-R",
+                "infinite",
+                "--no-playlist",
+                "--ignore-config",
+                "--no-warnings",
+                uri,
+                "-o",
+                "-",
+            ].to_vec()
+        }
+    };
 
     let ffmpeg_args = [
         "-f",
