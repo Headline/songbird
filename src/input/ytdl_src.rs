@@ -63,6 +63,8 @@ pub(crate) async fn _ytdl(uri: &str, pre_args: &[&str], cookie_file : Option<&st
                 "infinite",
                 "--no-playlist",
                 "--ignore-config",
+                "--extractor-args",
+                "youtube:player_client=tv_embedded,mediaconnect",
                 "--no-warnings",
                 "--cookies",
                 file,
@@ -79,6 +81,9 @@ pub(crate) async fn _ytdl(uri: &str, pre_args: &[&str], cookie_file : Option<&st
                 "-R",
                 "infinite",
                 "--no-playlist",
+                "--extractor-args",
+                "youtube:player_client=tv_embedded,mediaconnect",
+
                 "--ignore-config",
                 "--no-warnings",
                 uri,
