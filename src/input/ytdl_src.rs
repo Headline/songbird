@@ -105,6 +105,7 @@ pub(crate) async fn _ytdl(uri: &str, pre_args: &[&str], cookie_file : Option<&st
         "-",
     ];
 
+    println!("Sending command with args: {:?}", ytdl_args);
     let mut youtube_dl = Command::new(YOUTUBE_DL_COMMAND)
         .args(&ytdl_args)
         .stdin(Stdio::null())
